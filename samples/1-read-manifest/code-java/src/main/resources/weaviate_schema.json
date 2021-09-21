@@ -1,0 +1,35 @@
+{
+  "class": "Attribute",
+  "description": "Any Attribute",
+  "properties": [
+    {
+      "dataType": [
+        "string"
+      ],
+      "description": "Title of the article",
+      "name": "name"
+    },
+    {
+      "dataType": [
+        "Entity"
+      ],
+      "description": "The business entities that this attribute is part of ; Example is Account, EMR Appointment",
+      "name": "entities"
+    },
+    {
+      "dataType": [
+        "Category"
+      ],
+      "description": "Category which Specification of business rules to apply on this attribute. For example Device is one category, date is another etc ",
+      "name": "categories"
+    },
+    {
+      "dataType": [
+        "Trait"
+      ],
+      "description": "Category which Specification of business rules to apply on this attribute. For example Device is one category, date is another etc ",
+      "name": "traits"
+    }
+  ]
+}
+

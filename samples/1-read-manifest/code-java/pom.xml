@@ -54,5 +54,10 @@
             <artifactId>objectmodel</artifactId>
             <version>${cdm.objectmodel.version}</version>
         </dependency>
+        <dependency>
+            <groupId>technology.semi.weaviate</groupId>
+            <artifactId>client</artifactId>
+            <version>1.1.2</version>
+        </dependency>
     </dependencies>
 </project>
