@@ -2,9 +2,11 @@ package com.comatrix.cdm;
 import com.comatrix.cdm.model.Attribute;
 import com.comatrix.cdm.model.Entity;
 import com.google.gson.Gson;
+import com.microsoft.commondatamodel.objectmodel.cdm.*;
 import technology.semi.weaviate.client.Config;
 import technology.semi.weaviate.client.WeaviateClient;
 import technology.semi.weaviate.client.base.Result;
+import technology.semi.weaviate.client.v1.batch.api.ObjectsBatcher;
 import technology.semi.weaviate.client.v1.batch.api.ReferencesBatcher;
 import technology.semi.weaviate.client.v1.batch.model.BatchReference;
 import technology.semi.weaviate.client.v1.batch.model.BatchReferenceResponse;
@@ -16,6 +18,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class WeaviateGateway {
+    public WeaviateGateway() {
+    }
 
     public static void main(final String[] args) {
         Config config = new Config("http", "localhost:8080");
@@ -133,6 +137,23 @@ public class WeaviateGateway {
         return result;
     }
 
+    public static Result<BatchReferenceResponse[]> createAttributeEntityReferences(
+            WeaviateClient client, List<WeaviateObject> attributes, WeaviateObject entity) {
+        ReferencesBatcher refBatcher =  client.batch().referencesBatcher();
+        attributes.stream().forEach(a -> {
+            refBatcher.withReference(BatchReference.builder()
+                    .from("weaviate://localhost/Attribute/"+a.getId()+"/entities")
+                    .to("weaviate://localhost/"+entity.getId())
+                    .build());
+        });
+        Result<BatchReferenceResponse[]> result = refBatcher.run();
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+        }
+        System.out.println(result.getResult());
+        return result;
+    }
+
     private static List<WeaviateObject> createEntitiesBatch(WeaviateClient client) {
         List<WeaviateObject> objects = new ArrayList(){ {
             add(
@@ -174,5 +195,166 @@ public class WeaviateGateway {
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects;
+    }
+
+    public static List<WeaviateObject> createEntitiesBatch(
+            WeaviateClient client, CdmEntityCollection cdmEntityCollection) {
+        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+        List<WeaviateObject> objects = new ArrayList<>();
+        cdmEntityCollection.forEach(e -> {
+            String uuid = UUID.randomUUID().toString();
+            WeaviateObject object = WeaviateObject.builder()
+                    .className("Entity")
+                    .id(uuid)
+                    .properties(new HashMap() { {
+                        put("entityName", e.getEntityName());
+                        put("name", e.getName());
+                        put("entityId", e.getId());
+                        put("explanation", e.getExplanation());
+                        put("objectTypeName", e.getObjectType().name());
+                        put("entityPath", e.getEntityPath());
+//                                put("writesFor", new HashMap() { {
+//                                    put("beacon", "weaviate://localhost/f81bfe5e-16ba-4615-a516-46c2ae2e5a80");
+//                                } });
+                    } })
+                    .build();
+            objects.add(object);
+            objBatcher.withObject(object);
+        });
+
+        Result<ObjectGetResponse[]> result = objBatcher.run();
+
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+            return null;
+        }
+        System.out.println(result.getResult());
+        // For some reason, batch result does not have response objects;
+        // Hence just return  the request objects directly if the call succeeded for now
+        return objects;
+    }
+
+    public static WeaviateObject createEntity(
+            WeaviateClient client, CdmEntityDeclarationDefinition eDecDef,
+            CdmEntityDefinition eDef) {
+        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+        List<WeaviateObject> objects = new ArrayList<>();
+        String uuid = UUID.randomUUID().toString();
+        WeaviateObject object = WeaviateObject.builder()
+                .className("Entity")
+                .id(uuid)
+                .properties(new HashMap() { {
+                    put("entityName", eDecDef.getEntityName());
+                    put("name", eDecDef.getName());
+                    put("entityId", eDecDef.getId());
+                    put("explanation", eDecDef.getExplanation());
+                    put("entityPath", eDecDef.getEntityPath());
+                    put("description", eDef.getDescription());
+                    put("displayName", eDef.getDisplayName());
+
+//                                put("writesFor", new HashMap() { {
+//                                    put("beacon", "weaviate://localhost/f81bfe5e-16ba-4615-a516-46c2ae2e5a80");
+//                                } });
+                } })
+                .build();
+        objects.add(object);
+        objBatcher.withObject(object);
+
+        Result<ObjectGetResponse[]> result = objBatcher.run();
+
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+            return null;
+        }
+        System.out.println(result.getResult());
+        // For some reason, batch result does not have response objects;
+        // Hence just return  the request objects directly if the call succeeded for now
+        return objects.get(0);
+    }
+
+    public static List<WeaviateObject> createAttributesBatch(
+            WeaviateClient client, CdmEntityDefinition cdmEntityDefinition) {
+        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+        List<WeaviateObject> objects = new ArrayList<>();
+        // This way of getting the attributes only works well for 'resolved' entities
+        // that have been flattened out.
+        // An abstract entity can be resolved by calling createResolvedEntity on it.
+        cdmEntityDefinition.getAttributes().forEach(a -> {
+            String uuid = UUID.randomUUID().toString();
+            if (a instanceof CdmTypeAttributeDefinition) {
+                final CdmTypeAttributeDefinition typeAttributeDefinition =
+                        (CdmTypeAttributeDefinition) a;
+                WeaviateObject object = WeaviateObject.builder()
+                        .className("Attribute")
+                        .id(uuid)
+                        .properties(new HashMap() {
+                            {
+                                put("name", typeAttributeDefinition.getName());
+                                // put("ownerObjectType", a.getOwner().getObjectType());
+                                put("ownerId", a.getOwner().getId());
+                                put("attributeId", a.getId());
+                                // put("objectTypeName", a.getObjectType().name());
+                                put("corpusPath", a.getAtCorpusPath());
+                                // put("cdmDataType", typeAttributeDefinition.getDataType().);
+                                put("dataFormat", typeAttributeDefinition.fetchDataFormat().name());
+                                // put("attributeDefObjTypeName", typeAttributeDefinition.getObjectType().name());
+                                put("defaultValue", typeAttributeDefinition.fetchDefaultValue());
+                                put("maximumValue", typeAttributeDefinition.fetchMaximumValue());
+                                put("minimumValue", typeAttributeDefinition.fetchMinimumValue());
+                                put("description", typeAttributeDefinition.fetchDescription());
+                                put("displayName", typeAttributeDefinition.fetchDisplayName());
+                                put("maximumLength", typeAttributeDefinition.fetchMaximumLength());
+                                put("displayName", typeAttributeDefinition.fetchDisplayName());
+                                put("sourceName", typeAttributeDefinition.fetchSourceName());
+                                put("explanation", typeAttributeDefinition.getExplanation());
+//                                put("writesFor", new HashMap() { {
+//                                    put("beacon", "weaviate://localhost/f81bfe5e-16ba-4615-a516-46c2ae2e5a80");
+//                                } });
+                            }
+                        })
+                        .build();
+                objects.add(object);
+                objBatcher.withObject(object);
+            }
+        });
+
+        Result<ObjectGetResponse[]> result = objBatcher.run();
+
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+            return null;
+        }
+        System.out.println(result.getResult());
+        // For some reason, batch result does not have response objects;
+        // Hence just return  the request objects directly if the call succeeded for now
+        return objects;
+    }
+
+
+    static void printTrait(CdmTraitReferenceBase trait) {
+        if (!com.microsoft.commondatamodel.objectmodel.utilities.StringUtils.isNullOrEmpty(trait.fetchObjectDefinitionName())) {
+            System.out.println("      " + trait.fetchObjectDefinitionName());
+
+            if (trait instanceof CdmTraitReference) {
+                for (CdmArgumentDefinition argDef : ((CdmTraitReference) trait).getArguments()) {
+                    if (argDef.getValue() instanceof CdmEntityReference) {
+                        System.out.println("         Constant: [");
+
+                        CdmConstantEntityDefinition contEntDef =
+                                ((CdmEntityReference)argDef.getValue()).fetchObjectDefinition();
+
+                        for (List<String> constantValueList : contEntDef.getConstantValues()) {
+                            System.out.println("             " + constantValueList);
+                        }
+                        System.out.println("         ]");
+                    }
+                    else
+                    {
+                        // Default output, nothing fancy for now
+                        System.out.println("         " + argDef.getValue());
+                    }
+                }
+            }
+        }
     }
 }

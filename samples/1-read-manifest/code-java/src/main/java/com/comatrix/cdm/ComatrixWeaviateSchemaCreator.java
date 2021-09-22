@@ -33,6 +33,30 @@ public class ComatrixWeaviateSchemaCreator {
     public static void createSchema(WeaviateClient client) {
         createEntitySchema(client);
         createAttributeSchema(client);
+        createTraitSchema(client);
+    }
+
+    private static void createTraitSchema(WeaviateClient client) {
+        WeaviateClass clazz = WeaviateClass.builder()
+                .className("Trait")
+                .description("A Trait")
+                .vectorIndexType("hnsw")
+                //   .vectorizer("text2vec-contextionary")
+                .properties(new ArrayList() { {
+                    add(Property.builder()
+                            .dataType(new ArrayList(){ { add(DataType.STRING); } })
+                            .description("Trait name")
+                            .name("name")
+                            .build());
+                } })
+                .build();
+
+        Result<Boolean> result = client.schema().classCreator().withClass(clazz).run();
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+            return;
+        }
+        System.out.println(result.getResult());
     }
 
     private static void createEntitySchema(WeaviateClient client) {
@@ -69,11 +93,6 @@ public class ComatrixWeaviateSchemaCreator {
                             .dataType(new ArrayList(){ { add(DataType.STRING); } })
                             .description("Attribute Name")
                             .name("name")
-                            .build());
-                    add(Property.builder()
-                            .dataType(new ArrayList(){ { add("Entity"); } })
-                            .description("Attribute's entity")
-                            .name("ent")
                             .build());
                 } })
                 .build();

@@ -7,9 +7,14 @@ import com.microsoft.commondatamodel.objectmodel.cdm.*;
 import com.microsoft.commondatamodel.objectmodel.enums.CdmStatusLevel;
 import com.microsoft.commondatamodel.objectmodel.storage.LocalAdapter;
 import org.apache.commons.lang3.StringUtils;
+import technology.semi.weaviate.client.Config;
+import technology.semi.weaviate.client.WeaviateClient;
+import technology.semi.weaviate.client.v1.data.model.WeaviateObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 /**
  * -------------------------------------------------------------------------------------------------
@@ -21,6 +26,9 @@ import java.util.Scanner;
  */
 public class CDMLoader {
   private final static Scanner SCANNER = new Scanner(System.in);
+  static  Config config = new Config("http", "localhost:8080");
+  static WeaviateClient client = new WeaviateClient(config);
+  // WeaviateGateway weaviateGateway = new WeaviateGateway();
 
   public static void main(final String[] args) {
 
@@ -104,6 +112,8 @@ public class CDMLoader {
           System.out.println(entityDeclaration.getEntityPath());
           index++;
         }
+        // List<WeaviateObject> weaviateEntities = WeaviateGateway.createEntitiesBatch(client,manifest.getEntities());
+        // weaviateEntities.stream().collect(Collectors.toMap( o-> o.getProperties().get))
       }
 
       if (manifest.getSubManifests().size() > 0) {
@@ -147,7 +157,7 @@ public class CDMLoader {
         exploreManifest(cdmCorpus, cdmCorpus.getStorage().createAbsoluteCorpusPath(manifest.getSubManifests().get(subNum).getDefinition(), manifest));
         continue;
       }
-
+      List<WeaviateObject> weaviateEntities = new ArrayList<>();
       index = 1;
       for (final CdmEntityDeclarationDefinition entityDeclaration : manifest.getEntities()) {
         if (index == num) {
@@ -180,7 +190,9 @@ public class CDMLoader {
             if (com.microsoft.commondatamodel.objectmodel.utilities.StringUtils.isNullOrEmpty(input)) {
               break;
             }
-
+            WeaviateObject entityWeaviateObj =  WeaviateGateway.createEntity(client, entityDeclaration, entSelected);
+            weaviateEntities.add(entityWeaviateObj);
+            // TODO : Radha; Collect Entity references and Create Entity references also at the end
             // Make sure the user's input is a number.
             final int choice;
             try {
@@ -188,7 +200,7 @@ public class CDMLoader {
               switch (choice) {
                 // List the entity's attributes.
                 case 1:
-                  listAttributes(entSelected);
+                  listAttributes(entSelected, entityWeaviateObj);
                   break;
                 // List the entity's traits.
                 case 2:
@@ -230,7 +242,7 @@ public class CDMLoader {
     }
   }
 
-  static void listAttributes(final CdmEntityDefinition entity) {
+  static void listAttributes(final CdmEntityDefinition entity, WeaviateObject entWeaviateObj) {
     System.out.println("\nList of all attributes for the entity " + entity.getEntityName() + ":");
 
     // This way of getting the attributes only works well for 'resolved' entities
@@ -250,6 +262,8 @@ public class CDMLoader {
         System.out.println();
       }
     }
+    List<WeaviateObject> attributes = WeaviateGateway.createAttributesBatch(client, entity);
+    WeaviateGateway.createAttributeEntityReferences(client,attributes, entWeaviateObj);
   }
 
   static void listTraits(final CdmEntityDefinition entity) {

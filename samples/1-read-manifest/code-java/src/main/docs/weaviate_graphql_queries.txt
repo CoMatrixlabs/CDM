@@ -1,0 +1,109 @@
+
+{
+Get {
+Entity {
+name
+entityId
+entityName
+entityPath
+objectTypeName
+
+__typename
+_additional {
+id
+}
+}
+}
+}
+
+# Beacon query
+----------------
+{
+  Get {
+    Attribute {
+      name
+      entities {
+        ... on Entity {
+          name
+          entityName
+          displayName
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+{
+  Get {
+    Attribute {
+      name
+      maximumValue
+      maximumLength
+      maximumValue
+      dataFormat
+      entities {
+        ... on Entity {
+          name
+          entityName
+          displayName
+
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+{
+  Get {
+    Attribute {
+      name
+      description
+      maximumValue
+      maximumLength
+      maximumValue
+      dataFormat
+      entities {
+        ... on Entity {
+          name
+          entityName
+          displayName
+          description
+
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+Semantic query
+-------------
+{
+  Get {
+    Entity (
+      nearText: {
+        concepts: ["device"],
+      }
+    ) {
+      name
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}

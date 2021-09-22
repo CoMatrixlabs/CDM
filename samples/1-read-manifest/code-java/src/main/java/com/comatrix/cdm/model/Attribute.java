@@ -11,7 +11,6 @@ import java.util.Map;
 @Setter
 public class Attribute extends Version{
     String name;
-    Entity ent;
     // Map<String, Object> properties = new HashMap<>();
     // List<Entity> entities;
     // List<CoMatrixCategory> categories;
