@@ -116,5 +116,17 @@ public class ComatrixWeaviateSchemaCreator {
             return;
         }
         System.out.println(result.getResult());
+
+        Property relReferenceProperty = Property.builder()
+                .dataType(Arrays.asList("Attribute"))
+                .description("reference to other  attributes ")
+                .name("relationships")
+                .build();
+        Result<Boolean> relationshipsRefAdd = client.schema().propertyCreator().withClassName("Attribute").withProperty(relReferenceProperty).run();
+        if (result.hasErrors()) {
+            System.out.println(result.getError());
+            return;
+        }
+        System.out.println(result.getResult());
     }
 }

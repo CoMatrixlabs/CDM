@@ -14,7 +14,6 @@ import technology.semi.weaviate.client.v1.data.model.WeaviateObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 /**
  * -------------------------------------------------------------------------------------------------
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
  */
 public class CDMLoader {
   private final static Scanner SCANNER = new Scanner(System.in);
-  static  Config config = new Config("http", "localhost:8080");
+  static Config config = new Config("http", "localhost:8080");
   static WeaviateClient client = new WeaviateClient(config);
   // WeaviateGateway weaviateGateway = new WeaviateGateway();
 
@@ -38,7 +37,7 @@ public class CDMLoader {
 
     final CdmCorpusDefinition cdmCorpus = new CdmCorpusDefinition();
 
-     // set callback to receive error and warning logs.
+    // set callback to receive error and warning logs.
     cdmCorpus.setEventCallback((level, message) -> {
       System.out.println(message);
     }, CdmStatusLevel.Warning);
@@ -51,8 +50,8 @@ public class CDMLoader {
     final String pathFromExeToExampleRoot = "../../";
 
     cdmCorpus.getStorage().mount(
-        "local",
-        new LocalAdapter(pathFromExeToExampleRoot + "1-read-manifest/sample-data"));
+            "local",
+            new LocalAdapter(pathFromExeToExampleRoot + "1-read-manifest/sample-data"));
 
     // 'local' is our default namespace.
     // Any paths that start navigating without a device tag (ex. 'cdm')
@@ -65,8 +64,8 @@ public class CDMLoader {
     // Mount it as the 'cdm' device, not the default,
     // so that we must use "cdm:<folder-path>" to get there.
     cdmCorpus.getStorage().mount(
-        "cdm",
-        new LocalAdapter(pathFromExeToExampleRoot + "example-public-standards"));
+            "cdm",
+            new LocalAdapter(pathFromExeToExampleRoot + "example-public-standards"));
 
     // Example how to mount to the ADLS.
     // final AdlsAdapter adlsAdapter = new AdlsAdapter(
@@ -80,7 +79,7 @@ public class CDMLoader {
 
     // ---------------------------------------------------------------------------------------------
     // Open the default manifest file at the root.
-    
+
     exploreManifest(cdmCorpus, "default.manifest.cdm.json");
   }
 
@@ -97,14 +96,14 @@ public class CDMLoader {
       System.err.println("Unable to load manifest " + manifestPath + ". Please inspect error log for additional details.");
       return;
     }
-
-    while (true) {
-      int index = 1;
-
+    // for(CdmEntityDeclarationDefinition entityDeclaration: manifest.getEntities()) {
+    // while (true) {
+    int index = 1;
+      /*
       if (manifest.getEntities().size() > 0) {
         System.out.println("List of all entities:");
 
-        for (final CdmEntityDeclarationDefinition entityDeclaration : manifest.getEntities()) {
+        // for (final CdmEntityDeclarationDefinition entityDeclaration : manifest.getEntities()) {
           // Print entity declarations.
           // Assume there are only local entities in this manifest for simplicity.
           System.out.print("  " + StringUtils.rightPad(Integer.toString(index), 3));
@@ -112,10 +111,11 @@ public class CDMLoader {
           System.out.println(entityDeclaration.getEntityPath());
           index++;
         }
-        // List<WeaviateObject> weaviateEntities = WeaviateGateway.createEntitiesBatch(client,manifest.getEntities());
-        // weaviateEntities.stream().collect(Collectors.toMap( o-> o.getProperties().get))
-      }
-
+       */
+    // List<WeaviateObject> weaviateEntities = WeaviateGateway.createEntitiesBatch(client,manifest.getEntities());
+    // weaviateEntities.stream().collect(Collectors.toMap( o-> o.getProperties().get))
+    // }
+      /*
       if (manifest.getSubManifests().size() > 0) {
         System.out.println("List of all sub-manifests:");
 
@@ -127,7 +127,9 @@ public class CDMLoader {
           index++;
         }
       }
-      
+
+       */
+      /*
       if (index == 1) {
         System.out.println("No Entities or Sub-manifest found. Press [enter] to exit.");
         SCANNER.nextLine();
@@ -157,92 +159,119 @@ public class CDMLoader {
         exploreManifest(cdmCorpus, cdmCorpus.getStorage().createAbsoluteCorpusPath(manifest.getSubManifests().get(subNum).getDefinition(), manifest));
         continue;
       }
-      List<WeaviateObject> weaviateEntities = new ArrayList<>();
-      index = 1;
-      for (final CdmEntityDeclarationDefinition entityDeclaration : manifest.getEntities()) {
-        if (index == num) {
-          System.out.println(
+       */
+    List<WeaviateObject> weaviateEntities = new ArrayList<>();
+    List<CdmE2ERelationship> relationShips = new ArrayList<>();
+    index = 1;
+    for (final CdmEntityDeclarationDefinition entityDeclaration : manifest.getEntities()) {
+      // Print entity declarations.
+      // Assume there are only local entities in this manifest for simplicity.
+      System.out.print("  " + StringUtils.rightPad(Integer.toString(index), 3));
+      System.out.print("  " + StringUtils.rightPad(entityDeclaration.getEntityName(), 35));
+      System.out.println(entityDeclaration.getEntityPath());
+      // if (index == num) {
+      System.out.println(
               "Reading the entity schema and resolving with the standard docs, "
-                  + "first one may take a second ...");
+                      + "first one may take a second ...");
 
-          // From the path to the entity, get the actual schema description.
-          // Take the local relative path in this doc and make sure it works.
-          final CdmEntityDefinition entSelected =
+      // From the path to the entity, get the actual schema description.
+      // Take the local relative path in this doc and make sure it works.
+      final CdmEntityDefinition entSelected =
               cdmCorpus.<CdmEntityDefinition>fetchObjectAsync(
-                  entityDeclaration.getEntityPath(),
-                  manifest)
-                  .join(); // Gets the entity object from the doc.
+                              entityDeclaration.getEntityPath(),
+                              manifest)
+                      .join(); // Gets the entity object from the doc.
 
-          while (true) {
-            System.out.println("\nMetadata properties for the entity "
-                    + entityDeclaration.getEntityName() + ":");
-            System.out.println("  1: Attributes");
-            System.out.println("  2: Traits");
-            System.out.println("  3: Properties");
-            System.out.println("  4: Data partition locations");
-            System.out.println("  5: Relationships");
+      /* while (true) {
+        System.out.println("\nMetadata properties for the entity "
+                + entityDeclaration.getEntityName() + ":");
+        System.out.println("  1: Attributes");
+        System.out.println("  2: Traits");
+        System.out.println("  3: Properties");
+        System.out.println("  4: Data partition locations");
+        System.out.println("  5: Relationships");
 
-            System.out.println("Enter a number to show details for that metadata "
-              + "property (press [enter] to explore other entities):");
+        System.out.println("Enter a number to show details for that metadata "
+                + "property (press [enter] to explore other entities):");
+        */
+        // Get the user's choice.
+//        String input = SCANNER.nextLine();
+//        if (com.microsoft.commondatamodel.objectmodel.utilities.StringUtils.isNullOrEmpty(input)) {
+//          break;
+//        }
+        WeaviateObject entityWeaviateObj = WeaviateGateway.createEntity(client, entityDeclaration, entSelected);
+        weaviateEntities.add(entityWeaviateObj);
+        // TODO : Radha; Collect Entity references and Create Entity references also at the end
+        // Make sure the user's input is a number.
+        List<WeaviateObject> attributes = listAttributes(entSelected, entityWeaviateObj);
+        // listTraits(entSelected);
+        //listProperties(entSelected, entityDeclaration);
+        // listDataPartitionLocations(cdmCorpus, entityDeclaration);
 
-            // Get the user's choice.
-            input = SCANNER.nextLine();
-            if (com.microsoft.commondatamodel.objectmodel.utilities.StringUtils.isNullOrEmpty(input)) {
-              break;
-            }
-            WeaviateObject entityWeaviateObj =  WeaviateGateway.createEntity(client, entityDeclaration, entSelected);
-            weaviateEntities.add(entityWeaviateObj);
-            // TODO : Radha; Collect Entity references and Create Entity references also at the end
-            // Make sure the user's input is a number.
-            final int choice;
-            try {
-              choice = Integer.parseInt(input);
-              switch (choice) {
-                // List the entity's attributes.
-                case 1:
-                  listAttributes(entSelected, entityWeaviateObj);
-                  break;
-                // List the entity's traits.
-                case 2:
-                  listTraits(entSelected);
-                  break;
-                // List the entity's properties.
-                case 3:
-                  listProperties(entSelected, entityDeclaration);
-                  break;
-                // List the entity's data partition locations.
-                case 4:
-                  listDataPartitionLocations(cdmCorpus, entityDeclaration);
-                  break;
-                // List the entity's relationships.
-                case 5:
-                  if (manifest.getRelationships() != null
-                      && manifest.getRelationships().getCount() > 0) {
-                    // The manifest file contains pre-calculated entity relationships,
-                    // so we can read them directly.
-                    listRelationshipsFromManifest(manifest, entSelected);
-                  } else {
-                    // The manifest file doesn't contain relationships,
-                    // so we have to compute the relationships first.
-                    cdmCorpus.calculateEntityGraphAsync(manifest).join();
-                    listRelationships(cdmCorpus, entSelected);
-                  }
-                  break;
-                default:
-                  System.out.println("\nEnter a number between 1-5.");
-                  break;
-              }
-            } catch (final NumberFormatException ne) {
-              System.out.println("\nEnter a number.");
-            }
-          }
+        if (manifest.getRelationships() != null
+                && manifest.getRelationships().getCount() > 0) {
+          // The manifest file contains pre-calculated entity relationships,
+          // so we can read them directly.
+          relationShips.addAll(listRelationshipsFromManifest(manifest, entSelected));
+        } else {
+          // The manifest file doesn't contain relationships,
+          // so we have to compute the relationships first.
+          cdmCorpus.calculateEntityGraphAsync(manifest).join();
+          relationShips.addAll(listRelationships(cdmCorpus, entSelected));
         }
-        index++;
-      }
-    }
-  }
 
-  static void listAttributes(final CdmEntityDefinition entity, WeaviateObject entWeaviateObj) {
+        /*
+        final int choice;
+        try {
+          choice = Integer.parseInt(input);
+          switch (choice) {
+            // List the entity's attributes.
+            case 1:
+              listAttributes(entSelected, entityWeaviateObj);
+              break;
+            // List the entity's traits.
+            case 2:
+              listTraits(entSelected);
+              break;
+            // List the entity's properties.
+            case 3:
+              listProperties(entSelected, entityDeclaration);
+              break;
+            // List the entity's data partition locations.
+            case 4:
+              listDataPartitionLocations(cdmCorpus, entityDeclaration);
+              break;
+            // List the entity's relationships.
+            case 5:
+              if (manifest.getRelationships() != null
+                      && manifest.getRelationships().getCount() > 0) {
+                // The manifest file contains pre-calculated entity relationships,
+                // so we can read them directly.
+                listRelationshipsFromManifest(manifest, entSelected);
+              } else {
+                // The manifest file doesn't contain relationships,
+                // so we have to compute the relationships first.
+                cdmCorpus.calculateEntityGraphAsync(manifest).join();
+                listRelationships(cdmCorpus, entSelected);
+              }
+              break;
+            default:
+              System.out.println("\nEnter a number between 1-5.");
+              break;
+          }
+        } catch (final NumberFormatException ne) {
+          System.out.println("\nEnter a number.");
+        } */
+      index++;
+      if(index == 3)
+        break;
+      }
+    // process relationships at the end
+    WeaviateGateway.createRelationShipReferences(client,relationShips);
+    }
+
+
+  static List<WeaviateObject> listAttributes(final CdmEntityDefinition entity, WeaviateObject entWeaviateObj) {
     System.out.println("\nList of all attributes for the entity " + entity.getEntityName() + ":");
 
     // This way of getting the attributes only works well for 'resolved' entities
@@ -258,12 +287,13 @@ public class CDMLoader {
         printProperty("DataFormat", typeAttributeDefinition.fetchDataFormat().name());
         // And all the traits of this attribute.
         System.out.println("AppliedTraits:");
-        typeAttributeDefinition.getAppliedTraits().forEach(CDMLoader::printTrait);
+        // typeAttributeDefinition.getAppliedTraits().forEach(CDMLoader::printTrait);
         System.out.println();
       }
     }
     List<WeaviateObject> attributes = WeaviateGateway.createAttributesBatch(client, entity);
     WeaviateGateway.createAttributeEntityReferences(client,attributes, entWeaviateObj);
+    return attributes;
   }
 
   static void listTraits(final CdmEntityDefinition entity) {
@@ -323,21 +353,26 @@ public class CDMLoader {
     }
   }
 
-  static void listRelationships(
+  static List<CdmE2ERelationship> listRelationships(
       final CdmCorpusDefinition cdmCorpus,
       final CdmEntityDefinition entity) {
     System.out.println(
         "\nList of all relationships for the entity " + entity.getEntityName() + ":"
     );
+    List<CdmE2ERelationship> relationShips = new ArrayList<>();
     // Loop through all the relationships where other entities point to this entity.
-    cdmCorpus.fetchIncomingRelationships(entity).forEach(CDMLoader::printRelationship);
+    //cdmCorpus.fetchIncomingRelationships(entity).forEach(CDMLoader::printRelationship);
+    relationShips.addAll(cdmCorpus.fetchIncomingRelationships(entity));
     // Now loop through all the relationships where this entity points to other entities.
-    cdmCorpus.fetchOutgoingRelationships(entity).forEach(CDMLoader::printRelationship);
+    // cdmCorpus.fetchOutgoingRelationships(entity).forEach(CDMLoader::printRelationship);
+    relationShips.addAll(cdmCorpus.fetchOutgoingRelationships(entity));
+    return relationShips;
   }
 
-  static void listRelationshipsFromManifest(
+  static List<CdmE2ERelationship> listRelationshipsFromManifest(
       final CdmManifestDefinition manifest,
       final CdmEntityDefinition entity) {
+    List<CdmE2ERelationship> relationShips = new ArrayList<>();
     System.out.println(
         "\nList of all relationships for the entity " + entity.getEntityName() + ":"
     );
@@ -348,8 +383,10 @@ public class CDMLoader {
       if (relationship.getFromEntity().contains(entity.getEntityName())
           || relationship.getToEntity().contains(entity.getEntityName())) {
         printRelationship(relationship);
+        relationShips.add(relationship);
       }
     }
+    return relationShips;
   }
 
   static void printTrait(CdmTraitReferenceBase trait) {

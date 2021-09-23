@@ -12,10 +12,10 @@ import technology.semi.weaviate.client.v1.batch.model.BatchReference;
 import technology.semi.weaviate.client.v1.batch.model.BatchReferenceResponse;
 import technology.semi.weaviate.client.v1.batch.model.ObjectGetResponse;
 import technology.semi.weaviate.client.v1.data.model.WeaviateObject;
+import technology.semi.weaviate.client.v1.graphql.model.GraphQLResponse;
 import technology.semi.weaviate.client.v1.misc.model.Meta;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class WeaviateGateway {
     public WeaviateGateway() {
@@ -55,7 +55,8 @@ public class WeaviateGateway {
                 .run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return;
         }
         System.out.println(result.getResult());
@@ -106,7 +107,8 @@ public class WeaviateGateway {
                 .run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return;
         }
         System.out.println(result.getResult());
@@ -131,7 +133,8 @@ public class WeaviateGateway {
         });
         Result<BatchReferenceResponse[]> result = refBatcher.run();
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
         }
         System.out.println(result.getResult());
         return result;
@@ -148,10 +151,86 @@ public class WeaviateGateway {
         });
         Result<BatchReferenceResponse[]> result = refBatcher.run();
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
         }
         System.out.println(result.getResult());
         return result;
+    }
+
+    public static Result<BatchReferenceResponse[]> createRelationShipReferences(
+            WeaviateClient client, List<CdmE2ERelationship> relationShips) {
+        ReferencesBatcher refBatcher =  client.batch().referencesBatcher();
+        relationShips.stream().forEach(rel -> {
+            GraphQLResponse fromAttribute = getAttributeByName(client, rel.getFromEntityAttribute(), rel.getFromEntity());
+            GraphQLResponse toAttribute = getAttributeByName(client, rel.getToEntityAttribute(), rel.getToEntity());
+            if(fromAttribute == null || toAttribute == null)
+                return;
+            String fromAttributeId = getAttributeId(fromAttribute);
+            String toAttributeId = getAttributeId(toAttribute);
+            if(fromAttributeId != null && toAttributeId != null ) {
+                refBatcher.withReference(BatchReference.builder()
+                        .from("weaviate://localhost/Attribute/" + fromAttributeId + "/relationships")
+                        .to("weaviate://localhost/" + toAttributeId)
+                        .build());
+                System.out.println("Built relationship=====");
+                System.out.println("  FromEntity: " + rel.getFromEntity());
+                System.out.println("  FromEntityAttribute: " + rel.getFromEntityAttribute());
+                System.out.println("  ToEntity: " + rel.getToEntity());
+                System.out.println("  ToEntityAttribute: " + rel.getToEntityAttribute());
+                System.out.println("  fromId: " + fromAttributeId +" toId: "+ toAttributeId);
+
+                System.out.println();
+            }
+        });
+        Result<BatchReferenceResponse[]> result = refBatcher.run();
+        if (result.hasErrors()) {
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
+        }
+        System.out.println(result.getResult());
+        return result;
+    }
+
+    private static String getAttributeId(GraphQLResponse fromAttribute) {
+        Map data = (Map) fromAttribute.getData();
+        Map get = (Map) data.get("Get");
+        List getAttribute = (List) get.get("Attribute");
+        // The attribute is not present
+        if(getAttribute == null || getAttribute.size() == 0)
+            return null;
+        Map additional = (Map) ((Map)getAttribute.get(0)).get("_additional");
+        String id = (String) additional.get("id");
+        return id;
+    }
+
+    public static GraphQLResponse getAttributeByName(
+            WeaviateClient client, String attributeName,String entityManifestName) {
+        String fields = "name _additional { id }";
+        String entityName= entityManifestName.substring(entityManifestName.lastIndexOf('/') + 1);
+        String attributeNameEquals = "{ path: [\"name\"], operator: Equal valueString: \""+attributeName+"\" }";
+        String entityNameEquals = "{ path: [\"entities\", \"Entity\", \"name\"] operator: Equal, valueString: \""+entityName+"\"}";
+
+        String where = new StringBuilder()
+                .append("{")
+                .append("operator: And,")
+                .append("operands: [").append(attributeNameEquals).append(",").append(entityNameEquals).append("]")
+                .append("}")
+                .toString();
+        // System.out.println("Where clause = " + where);
+        Result<GraphQLResponse> result = client.graphQL().get()
+                .withClassName("Attribute")
+                .withFields(fields)
+                .withWhere(where)
+                .run();
+
+        if (result.hasErrors()) {
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
+            return null;
+        }
+        // System.out.println(result.getResult());
+        return result.getResult();
     }
 
     private static List<WeaviateObject> createEntitiesBatch(WeaviateClient client) {
@@ -188,7 +267,8 @@ public class WeaviateGateway {
                 .run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return null;
         }
         System.out.println(result.getResult());
@@ -225,7 +305,8 @@ public class WeaviateGateway {
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return null;
         }
         System.out.println(result.getResult());
@@ -263,7 +344,8 @@ public class WeaviateGateway {
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return null;
         }
         System.out.println(result.getResult());
@@ -321,7 +403,8 @@ public class WeaviateGateway {
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
         if (result.hasErrors()) {
-            System.out.println(result.getError());
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
             return null;
         }
         System.out.println(result.getResult());

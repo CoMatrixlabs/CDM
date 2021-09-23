@@ -90,6 +90,139 @@ id
   }
 }
 
+Query with filters
+-----------------
+{
+  Get {
+    Attribute(where: {
+        path: ["name"],    # Path to the property that should be used
+        operator: Equal,  # operator
+        valueString: "primaryContactName"        # value (which is always = to the type of the path property)
+      }) {
+      name
+      description
+      entities {
+        ... on Entity {
+          name
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+Query with multiple operands - search for an attribute by name in a particular entity with name.
+----------------------------
+{
+  Get {
+    Attribute(where: {
+      operator: And,
+      operands: [{
+          path: ["name"],
+          operator: Equal,
+          valueString: "primaryContactId"
+        }, {
+          path: ["entities", "Entity", "name"],
+          operator: Equal,
+          valueString: "Account"
+        }]
+      }) {
+      name
+      description
+      dataFormat
+      maximumLength
+      entities {
+        ... on Entity {
+          name
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+Query to show relationships between attributes from different entities
+--------------------------------------------------------------------
+{
+  Get {
+    Attribute(where: {
+      operator: And,
+      operands: [{
+          path: ["name"],
+          operator: Equal,
+          valueString: "parentId"
+        }, {
+          path: ["entities", "Entity", "name"],
+          operator: Equal,
+          valueString: "Address"
+        }]
+      }) {
+      name
+      description
+      dataFormat
+      maximumLength
+      entities {
+        ... on Entity {
+          name
+        }
+      }
+      relationships {
+        ... on Attribute {
+          name
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+Result:
+======
+{
+  "data": {
+    "Get": {
+      "Attribute": [
+        {
+          "__typename": "Attribute",
+          "_additional": {
+            "certainty": null,
+            "id": "2d979446-b5df-4d09-b91e-1aa80c09a4fa"
+          },
+          "dataFormat": "Guid",
+          "description": "Choose the customer's address.",
+          "entities": [
+            {
+              "name": "Address"
+            }
+          ],
+          "maximumLength": null,
+          "name": "parentId",
+          "relationships": [
+            {
+              "name": "accountId"
+            },
+            {
+              "name": "accountId"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
 Semantic query
 -------------
 {
