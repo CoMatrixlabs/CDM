@@ -59,5 +59,10 @@
             <artifactId>client</artifactId>
             <version>1.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>4.1</version>
+        </dependency>
     </dependencies>
 </project>

@@ -1,6 +1,7 @@
 package com.comatrix.cdm;
 import com.comatrix.cdm.model.Attribute;
 import com.comatrix.cdm.model.Entity;
+import com.comatrix.reader.CategoryCsvReader;
 import com.google.gson.Gson;
 import com.microsoft.commondatamodel.objectmodel.cdm.*;
 import technology.semi.weaviate.client.Config;
@@ -166,8 +167,8 @@ public class WeaviateGateway {
             GraphQLResponse toAttribute = getAttributeByName(client, rel.getToEntityAttribute(), rel.getToEntity());
             if(fromAttribute == null || toAttribute == null)
                 return;
-            String fromAttributeId = getAttributeId(fromAttribute);
-            String toAttributeId = getAttributeId(toAttribute);
+            String fromAttributeId = getId(fromAttribute);
+            String toAttributeId = getId(toAttribute);
             if(fromAttributeId != null && toAttributeId != null ) {
                 refBatcher.withReference(BatchReference.builder()
                         .from("weaviate://localhost/Attribute/" + fromAttributeId + "/relationships")
@@ -192,16 +193,22 @@ public class WeaviateGateway {
         return result;
     }
 
-    private static String getAttributeId(GraphQLResponse fromAttribute) {
-        Map data = (Map) fromAttribute.getData();
+    private static String getId(GraphQLResponse graphQlResponseObj) {
+        List list = getList(graphQlResponseObj);
+        if (list == null) return null;
+        Map additional = (Map) ((Map) list.get(0)).get("_additional");
+        String id = (String) additional.get("id");
+        return id;
+    }
+
+    private static List getList(GraphQLResponse graphQlResponseObj) {
+        Map data = (Map) graphQlResponseObj.getData();
         Map get = (Map) data.get("Get");
         List getAttribute = (List) get.get("Attribute");
         // The attribute is not present
         if(getAttribute == null || getAttribute.size() == 0)
             return null;
-        Map additional = (Map) ((Map)getAttribute.get(0)).get("_additional");
-        String id = (String) additional.get("id");
-        return id;
+        return getAttribute;
     }
 
     public static GraphQLResponse getAttributeByName(
@@ -266,12 +273,7 @@ public class WeaviateGateway {
                 .withObject(objects.get(1))
                 .run();
 
-        if (result.hasErrors()) {
-            System.out.println(result.getError().getStatusCode());
-            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
-            return null;
-        }
-        System.out.println(result.getResult());
+        if (hasError(result)) return null;
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects;
@@ -304,12 +306,7 @@ public class WeaviateGateway {
 
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
-        if (result.hasErrors()) {
-            System.out.println(result.getError().getStatusCode());
-            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
-            return null;
-        }
-        System.out.println(result.getResult());
+        if (hasError(result)) return null;
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects;
@@ -343,12 +340,7 @@ public class WeaviateGateway {
 
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
-        if (result.hasErrors()) {
-            System.out.println(result.getError().getStatusCode());
-            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
-            return null;
-        }
-        System.out.println(result.getResult());
+        if (hasError(result)) return null;
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects.get(0);
@@ -402,15 +394,20 @@ public class WeaviateGateway {
 
         Result<ObjectGetResponse[]> result = objBatcher.run();
 
-        if (result.hasErrors()) {
-            System.out.println(result.getError().getStatusCode());
-            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
-            return null;
-        }
-        System.out.println(result.getResult());
+        if (hasError(result)) return null;
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects;
+    }
+
+    private static boolean hasError(Result<ObjectGetResponse[]> result) {
+        if (result.hasErrors()) {
+            System.out.println(result.getError().getStatusCode());
+            result.getError().getMessages().stream().forEach(m -> System.out.println(m));
+            return true;
+        }
+        System.out.println(result.getResult());
+        return false;
     }
 
 
@@ -439,5 +436,54 @@ public class WeaviateGateway {
                 }
             }
         }
+    }
+
+    public static List<WeaviateObject> loadCategoriesIntoWeaviate(
+            WeaviateClient client) throws Exception {
+        CategoryCsvReader categoryCsvReader = new CategoryCsvReader();
+        List<String[]> categories = categoryCsvReader.readAllCategories();
+        if(categories == null || categories.isEmpty())
+            return null;
+        List<WeaviateObject> weaviateObjects = new ArrayList<>();
+        for(int i=1; i<categories.size(); i++) {
+            String categoryName = categories.get(i)[0];
+            String categoryType = categories.get(i)[1];
+            String categoryDescription = categories.get(i)[2];
+            WeaviateObject obj = buildCategoryWeaviateObject(categoryName, categoryType, categoryDescription);
+            weaviateObjects.add(obj);
+        }
+        List<WeaviateObject> results = postWeaviateObjects(client, weaviateObjects);
+        return results;
+    }
+
+    public static List<WeaviateObject> postWeaviateObjects(
+            WeaviateClient client, List<WeaviateObject> weaviateObjects) {
+        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+        List<WeaviateObject> objects = new ArrayList<>();
+        objects.addAll(weaviateObjects);
+        for(WeaviateObject wObj: weaviateObjects )
+            objBatcher.withObject(wObj);
+        Result<ObjectGetResponse[]> result = objBatcher.run();
+        if (hasError(result)) return null;
+        // For some reason, batch result does not have response objects;
+        // Hence just return  the request objects directly if the call succeeded for now
+        return objects;
+    }
+
+    private static WeaviateObject buildCategoryWeaviateObject(
+            String name,
+            String type,
+            String description) {
+        String uuid = UUID.randomUUID().toString();
+        WeaviateObject object = WeaviateObject.builder()
+                .className("Category")
+                .id(uuid)
+                .properties(new HashMap() { {
+                    put("name", name);
+                    put("type", type);
+                    put("description", description);
+                } })
+                .build();
+        return object;
     }
 }

@@ -240,3 +240,179 @@ Semantic query
     }
   }
 }
+
+{
+  Get {
+    Category (
+      nearText: {
+        concepts: ["icdcode"],
+      }
+    ) {
+      name
+      _additional {
+        certainty
+        classification {
+          basedOn
+          classifiedFields
+          completed
+          id
+          scope
+        }
+      }
+    }
+  }
+}
+
+{
+  Get {
+    Category (
+      nearText: {
+        concepts: ["social security"],
+      }
+    ) {
+      name
+      _additional {
+        certainty
+        classification {
+          basedOn
+          classifiedFields
+          completed
+          id
+          scope
+        }
+      }
+    }
+  }
+}
+
+{
+  Get {
+    Category (
+      nearText: {
+        concepts: ["May 4,1900"],
+      }
+    ) {
+      name
+      _additional {
+        certainty
+        classification {
+          basedOn
+          classifiedFields
+          completed
+          id
+          scope
+        }
+      }
+    }
+  }
+}
+
+Semantic Query combined with filters
+-----------------------------
+{
+  Get {
+    Article(
+      nearText: {
+        concepts: ["Housing prices"]
+      }
+      where: {
+        operator: Equal
+        path: ["inPublication", "Publication", "name"]
+        valueString: "The Economist"
+      }
+    ) {
+      title
+      inPublication {
+        ... on Publication {
+          name
+        }
+      }
+      _additional {
+        certainty
+      }
+    }
+  }
+}
+
+Group similar topics semantically together
+--------------------
+{
+  Get {
+    Attribute(
+      group: {
+        type: merge
+        force: 0.20
+      }
+    ) {
+
+      name
+    }
+  }
+}
+
+Classification quieries
+----------------------
+{
+  Get {
+    Attribute (
+      nearText: {
+        concepts: ["fashion"],
+      }
+    ) {
+      title
+      _additional {
+        classification {
+          basedOn
+          classifiedFields
+          completed
+          id
+          scope
+        }
+      }
+    }
+  }
+}
+
+Query based on partial string matches using Like
+---------------------------------------------
+{
+  Get {
+    Attribute(where: {
+        path: ["name"],    # Path to the property that should be used
+        operator: Like,  # operator
+        valueString: "*address*"        # value (which is always = to the type of the path property)
+      }) {
+      name
+      description
+      entities {
+        ... on Entity {
+          name
+        }
+      }
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}
+
+
+{
+  Get {
+    Category(where: {
+        path: ["name"],    # Path to the property that should be used
+        operator: Like,  # operator
+        valueString: "*address*"        # value (which is always = to the type of the path property)
+      }) {
+      name
+      description
+      __typename
+      _additional {
+        id
+        certainty
+      }
+    }
+  }
+}

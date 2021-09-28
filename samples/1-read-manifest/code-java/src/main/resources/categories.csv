@@ -1,0 +1,47 @@
+Label,Category,Description
+AGE,PII,"Number associated to an age, e.g. 27"
+CREDIT_CARD,PCI,"Credit card number, e.g. 0123 0123 0123 0123"
+PAYMENT_DATE,PCI,"The date the payment was made"
+CREDIT_CARD_EXPIRATION,PCI,E.g. Expires: 2/28
+CVV,PCI,"Credit Card Verification Code, e.g. CVV: 080"
+DATE,PII, E.g. December 18 or 2011-2014
+DOB,PII,"Date Of Birth, e.g. Date of Birth: March 7,1961"
+EMAIL_ADDRESS,PII, Email address of the customer E.g. info@private-ai.ca
+EVENT,GENERAL,E.g. Olympics
+FILENAME,GENERAL,"Name of a computer file, e.g., brad_tax_returns.txt, koalabear.jpg"
+ADDRESS,PII,"Home or office  address"
+ADDRESS2,PII,"Second Line of customer Address"
+IP_ADDRESS,PII, "Internet IP address, e.g. 192.168.0.1"
+LANGUAGE,GENERAL, "E.g. English, French"
+LOCATION,PII,"E.g. Eritrea, Italy"
+MONEY,GENERAL,"E.g. 15 dollars, $94.50"
+NAME,PII,"Person name, e.g. Harry Potter, Dwayne Johnson"
+FIRST_NAME,PII,"Person first name, e.g. Harry , Dwayne "
+LAST_NAME,PII,"Person last name name, e.g. Potter, Johnson"
+NUMERICAL_PII,PII,"Numeric PII that does not fall into other categories or that the model is uncertain about"
+ORGANIZATION,GENERAL,"E.g. BHP, McDonalds"
+OCCUPATION,GENERAL,"E.g. professor, actors, engineer, MBA, CPA"
+ORIGIN,GENERAL,"Origin encompasses nationalities, ethnicities, and races. E.g., Canadian, american, caucasia"
+PHONE_NUMBER,PII,E.g. +4917643476050
+PHONE,PII,E.g. +4917643476050
+POSTAL_CODE,PII,"Zip code or postal code of where a customer lives or works"
+ZIP_CODE,PII,"Zip code or postal code of where a customer lives or works"
+RELIGION,GENERAL,E.g. Hindu
+SSN,PII,"Social Security Number, e.g. 078-05-1120"
+TIME,GENERAL,E.g. 19:37:28
+URL,GENERAL, "Internet URL, e.g. www.private-ai.ca"
+USERNAME,PII,"User name or handle, e.g. privateairocks, @_PrivateAI"
+ZODIAC_SIGN,GENERAL,E.g. Aquarius
+BLOOD_TYPE,PHI,"Blood type, e.g., O-"
+CONDITION,PHI,"A medical condition. Includes diseases, syndromes, deficits, disorders. E.g., chronic fatigue syndrome, arrhythmia, depression."
+DRUG,PHI,"Medical drug, including vitamins and minerals. E.g., Advil, Acetaminophen, Panadol"
+INJURY,PHI,"Human injury, e.g., I broke my arm, I have a sprained wrist. Includes mutations, miscarriages and dislocations."
+MEDICAL_PROCESS,PHI,"Medical process, including treatments, procedures and tests. E.g., ‘heart surgery’, ‘CT scan’."
+AWARD,GENERAL, E.g. Nobel Prize
+HEALTHCARE_NUMBER,PII, "Healthcare number, e.g. 5584-486-674-YM"
+CUSTOMER_ID,PII,"Unique ID within system that can be attributed back to a customer"
+CUSTOMER_IDENTIFICATION,PII,"E.g. Social Security Number or Passport number or driver’s license number, e.g. D6101-40706-60905"
+PASSWORD,PII, E.g. secret_password
+PHYSICAL_ATTRIBUTE,PII, "A body attribute, e.g. I’m 190cm tall. i.e. height, weight, or any other body part measurement of a customer"
+POLITICAL_AFFILIATION,PII, "E.g. Democrat, Republican"
+PICTURE,PII,"A picture of a person  or product"

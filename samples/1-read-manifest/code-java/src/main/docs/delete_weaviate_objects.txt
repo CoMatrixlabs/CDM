@@ -1,0 +1,4 @@
+radha@MacBook-Pro weaviate % curl -X DELETE http://localhost:8080/v1/schema/Attribute
+radha@MacBook-Pro weaviate % curl -X DELETE http://localhost:8080/v1/schema/Entity
+radha@MacBook-Pro weaviate % curl -X DELETE http://localhost:8080/v1/schema/Trait
+radha@MacBook-Pro weaviate % curl -X DELETE http://localhost:8080/v1/schema/Category

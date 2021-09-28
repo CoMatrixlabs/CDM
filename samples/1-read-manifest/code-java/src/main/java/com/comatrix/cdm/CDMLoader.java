@@ -30,7 +30,12 @@ public class CDMLoader {
   // WeaviateGateway weaviateGateway = new WeaviateGateway();
 
   public static void main(final String[] args) {
-
+    List<WeaviateObject> categoryObjs = new ArrayList<>();
+    try {
+      categoryObjs = WeaviateGateway.loadCategoriesIntoWeaviate(client);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     // ---------------------------------------------------------------------------------------------
     // Instantiate a corpus. The corpus is the collection of all documents and folders created
     // or discovered while navigating objects and paths.
@@ -262,9 +267,11 @@ public class CDMLoader {
         } catch (final NumberFormatException ne) {
           System.out.println("\nEnter a number.");
         } */
+      /*
       index++;
       if(index == 3)
         break;
+       */
       }
     // process relationships at the end
     WeaviateGateway.createRelationShipReferences(client,relationShips);
