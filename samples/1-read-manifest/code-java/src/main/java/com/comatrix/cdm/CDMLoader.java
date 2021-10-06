@@ -29,7 +29,7 @@ public class CDMLoader {
   static WeaviateClient client = new WeaviateClient(config);
   // WeaviateGateway weaviateGateway = new WeaviateGateway();
 
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws InterruptedException {
     List<WeaviateObject> categoryObjs = new ArrayList<>();
     try {
       categoryObjs = WeaviateGateway.loadCategoriesIntoWeaviate(client);
@@ -88,7 +88,7 @@ public class CDMLoader {
     exploreManifest(cdmCorpus, "default.manifest.cdm.json");
   }
 
-  static void exploreManifest(CdmCorpusDefinition cdmCorpus, String manifestPath) {
+  static void exploreManifest(CdmCorpusDefinition cdmCorpus, String manifestPath) throws InterruptedException {
     // ---------------------------------------------------------------------------------------------
     // List all the entities found in the manifest
     // and allow the user to choose which entity to explore.
@@ -209,6 +209,7 @@ public class CDMLoader {
         // TODO : Radha; Collect Entity references and Create Entity references also at the end
         // Make sure the user's input is a number.
         List<WeaviateObject> attributes = listAttributes(entSelected, entityWeaviateObj);
+        Thread.sleep(3000);
         // listTraits(entSelected);
         //listProperties(entSelected, entityDeclaration);
         // listDataPartitionLocations(cdmCorpus, entityDeclaration);
@@ -274,6 +275,7 @@ public class CDMLoader {
        */
       }
     // process relationships at the end
+    Thread.sleep(10000);
     WeaviateGateway.createRelationShipReferences(client,relationShips);
     }
 

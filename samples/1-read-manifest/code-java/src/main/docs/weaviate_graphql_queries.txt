@@ -373,6 +373,37 @@ Classification quieries
   }
 }
 
+Classification and beacon link together
+--------------------------------------
+{
+  Get {
+    Attribute (
+      nearText: {
+        concepts: ["phone number"],
+      }
+    ) {
+      name
+      entities {
+        ... on Entity {
+          name
+          entityName
+          displayName
+        }
+      }
+      _additional {
+        certainty
+        classification {
+          basedOn
+          classifiedFields
+          completed
+          id
+          scope
+        }
+      }
+    }
+  }
+}
+
 Query based on partial string matches using Like
 ---------------------------------------------
 {

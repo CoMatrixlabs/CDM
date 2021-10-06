@@ -143,20 +143,36 @@ public class WeaviateGateway {
 
     public static Result<BatchReferenceResponse[]> createAttributeEntityReferences(
             WeaviateClient client, List<WeaviateObject> attributes, WeaviateObject entity) {
-        ReferencesBatcher refBatcher =  client.batch().referencesBatcher();
-        attributes.stream().forEach(a -> {
+        ReferencesBatcher refBatcher = client.batch().referencesBatcher();
+        for (int i=0; i < attributes.size(); i++) {
+            WeaviateObject a = attributes.get(i);
             refBatcher.withReference(BatchReference.builder()
-                    .from("weaviate://localhost/Attribute/"+a.getId()+"/entities")
-                    .to("weaviate://localhost/"+entity.getId())
+                    .from("weaviate://localhost/Attribute/" + a.getId() + "/entities")
+                    .to("weaviate://localhost/" + entity.getId())
                     .build());
-        });
-        Result<BatchReferenceResponse[]> result = refBatcher.run();
-        if (result.hasErrors()) {
-            System.out.println(result.getError().getStatusCode());
-            result.getError().getMessages().stream().forEach(m-> System.out.println(m));
+            if (i % 10 == 9) {
+                Result<BatchReferenceResponse[]> result = refBatcher.run();
+                if (result.hasErrors()) {
+                    System.out.println(result.getError().getStatusCode());
+                    result.getError().getMessages().stream().forEach(m -> System.out.println(m));
+                }
+                System.out.println(result.getResult());
+                // InitialiZe new batcher
+                refBatcher = client.batch().referencesBatcher();
+            }
         }
-        System.out.println(result.getResult());
-        return result;
+        // Last leftover small batch
+        if(attributes.size()%10 > 0) {
+            Result<BatchReferenceResponse[]> result = refBatcher.run();
+            if (result.hasErrors()) {
+                System.out.println(result.getError().getStatusCode());
+                result.getError().getMessages().stream().forEach(m -> System.out.println(m));
+            }
+            System.out.println(result.getResult());
+        }
+            //return allResults.stream().reduce(new Result<>()r -> r.getResult();
+        // FIX later
+        return null;
     }
 
     public static Result<BatchReferenceResponse[]> createRelationShipReferences(
@@ -348,13 +364,16 @@ public class WeaviateGateway {
 
     public static List<WeaviateObject> createAttributesBatch(
             WeaviateClient client, CdmEntityDefinition cdmEntityDefinition) {
-        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+
         List<WeaviateObject> objects = new ArrayList<>();
         // This way of getting the attributes only works well for 'resolved' entities
         // that have been flattened out.
         // An abstract entity can be resolved by calling createResolvedEntity on it.
-        cdmEntityDefinition.getAttributes().forEach(a -> {
+        List<ObjectsBatcher> batchers = new ArrayList();
+        ObjectsBatcher objBatcher =  client.batch().objectsBatcher();
+        for(int i=0; i<cdmEntityDefinition.getAttributes().size();i++) {
             String uuid = UUID.randomUUID().toString();
+            CdmAttributeItem a = cdmEntityDefinition.getAttributes().get(i);
             if (a instanceof CdmTypeAttributeDefinition) {
                 final CdmTypeAttributeDefinition typeAttributeDefinition =
                         (CdmTypeAttributeDefinition) a;
@@ -389,12 +408,20 @@ public class WeaviateGateway {
                         .build();
                 objects.add(object);
                 objBatcher.withObject(object);
+                if(i%10 == 9) {
+                    Result<ObjectGetResponse[]> result = objBatcher.run();
+                    hasError(result);
+                    objBatcher = client.batch().objectsBatcher();
+                }
+
             }
-        });
-
-        Result<ObjectGetResponse[]> result = objBatcher.run();
-
-        if (hasError(result)) return null;
+        }
+        // Last leftover small batch
+        if(cdmEntityDefinition.getAttributes().size()%10 > 0) {
+            Result<ObjectGetResponse[]> result = objBatcher.run();
+            hasError(result);
+        }
+        // if (hasError(result)) return null;
         // For some reason, batch result does not have response objects;
         // Hence just return  the request objects directly if the call succeeded for now
         return objects;
