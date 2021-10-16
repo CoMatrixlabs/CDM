@@ -1,0 +1,21 @@
+How to create CDM.tar.gz corpus to put into the container image
+=============================
+(base) radha@Radha-MacBook-Air-2021 comatrix % ls
+CDM				Spark-delta-jupyter-experiments	cryptoknowledge			weaviate
+CDM.tar.gz			comatrix			pyspark-example-project		zingg
+
+tar -cf  CDM.tar.gz CDM  --exclude='.git/*' --exclude='.idea/*'
+( The above is still not working well ; It is is still including .idea and .git directories; TODO fix later)
+
+cp CDM.tar.gz ./CDM/samples/1-read-manifest/code-java/
+
+After CDM.tar.gz is available in above directory, the command "ADD CDM.tar.gz /" already present in Dockerfile
+will transfer this to docker image when you run  docker build -t comatrix/cdmloader .
+
+Now you can follow belong instructions to run CDMLoade and it will create schema,
+load catgories and load attributes, entities and relationships corpus into weaviate
+
+
+How to run CDMLoader/Ingestor
+After running weaviate docker-compose.yml run below
+docker run --network weaviate_default -e "SEARCH_SERVICE=weaviate:8080" comatrix/cdmloader:latest

@@ -17,7 +17,12 @@ import java.util.*;
 public class ComatrixWeaviateSchemaCreator {
 
     public static void main(final String[] args) {
-        Config config = new Config("http", "localhost:8080");
+        Map<String, String> env = System.getenv();
+        System.out.println("SEARCH_SERVICE: "+env.get("SEARCH_SERVICE"));
+        String searchServiceUrl = env.getOrDefault(
+                "SEARCH_SERVICE","localhost:8080");
+        System.out.println("SEARCH_SERVICE URL : "+searchServiceUrl);
+        Config config = new Config("http", searchServiceUrl);
         WeaviateClient client = new WeaviateClient(config);
         Result<Meta> meta = client.misc().metaGetter().run();
         if (meta.getResult() != null) {

@@ -13,6 +13,7 @@ import technology.semi.weaviate.client.v1.data.model.WeaviateObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -25,11 +26,22 @@ import java.util.Scanner;
  */
 public class CDMLoader {
   private final static Scanner SCANNER = new Scanner(System.in);
-  static Config config = new Config("http", "localhost:8080");
-  static WeaviateClient client = new WeaviateClient(config);
+  // static Config config = new Config("http", "localhost:8080");
+  // static WeaviateClient client = new WeaviateClient(config);
+  static Config config = null;
+  static WeaviateClient client = null;
   // WeaviateGateway weaviateGateway = new WeaviateGateway();
 
   public static void main(final String[] args) throws InterruptedException {
+    //Read environmental variables:
+    Map<String, String> env = System.getenv();
+    System.out.println("SEARCH_SERVICE: "+env.get("SEARCH_SERVICE"));
+    String searchServiceUrl = env.getOrDefault(
+            "SEARCH_SERVICE","localhost:8080");
+    config = new Config("http", searchServiceUrl);
+    client = new WeaviateClient(config);
+    // Create Schema first
+    ComatrixWeaviateSchemaCreator.createSchema(client);
     List<WeaviateObject> categoryObjs = new ArrayList<>();
     try {
       categoryObjs = WeaviateGateway.loadCategoriesIntoWeaviate(client);
@@ -52,8 +64,9 @@ public class CDMLoader {
 
     // We want our storage adapters to point at the local manifest location
     // and at the example public standards.
-    final String pathFromExeToExampleRoot = "../../";
-
+    //final String pathFromExeToExampleRoot = "../../";
+    // Path changed to work with docker container topath within jar
+    final String pathFromExeToExampleRoot = "/CDM/samples/";
     cdmCorpus.getStorage().mount(
             "local",
             new LocalAdapter(pathFromExeToExampleRoot + "1-read-manifest/sample-data"));
@@ -85,6 +98,7 @@ public class CDMLoader {
     // ---------------------------------------------------------------------------------------------
     // Open the default manifest file at the root.
 
+    // exploreManifest(cdmCorpus, "/default.manifest.cdm.json");
     exploreManifest(cdmCorpus, "default.manifest.cdm.json");
   }
 

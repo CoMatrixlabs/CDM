@@ -5,6 +5,9 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,8 +29,11 @@ public class CategoryCsvReader {
     // https://www.baeldung.com/opencsv
 
     public List<String[]> readAllCategories() throws Exception {
-        Reader reader = Files.newBufferedReader(Paths.get(
-                ClassLoader.getSystemResource("categories.csv").toURI()));
+//        Reader reader = Files.newBufferedReader(Paths.get(
+//                ClassLoader.getSystemResource("categories.csv").toURI()));
+        InputStream in = getClass().getResourceAsStream("/categories.csv");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        // Reader reader = new BufferedReader(CategoryCsvReader.class.getResourceAsStream("categories.csv"))
         return readAll(reader);
     }
     public List<String[]> readAll(Reader reader) throws Exception {
