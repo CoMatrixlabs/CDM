@@ -473,10 +473,12 @@ public class WeaviateGateway {
             return null;
         List<WeaviateObject> weaviateObjects = new ArrayList<>();
         for(int i=1; i<categories.size(); i++) {
-            String categoryName = categories.get(i)[0];
-            String categoryType = categories.get(i)[1];
-            String categoryDescription = categories.get(i)[2];
-            WeaviateObject obj = buildCategoryWeaviateObject(categoryName, categoryType, categoryDescription);
+            String label = categories.get(i)[0];
+            String sensitivity = categories.get(i)[1];
+            String category = categories.get(i)[2];
+            String trait = categories.get(i)[3];
+            String categoryDescription = categories.get(i)[4];
+            WeaviateObject obj = buildCategoryWeaviateObject(label, sensitivity, category, trait, categoryDescription);
             weaviateObjects.add(obj);
         }
         List<WeaviateObject> results = postWeaviateObjects(client, weaviateObjects);
@@ -498,16 +500,20 @@ public class WeaviateGateway {
     }
 
     private static WeaviateObject buildCategoryWeaviateObject(
-            String name,
-            String type,
+            String label,
+            String sensitivity,
+            String category,
+            String trait,
             String description) {
         String uuid = UUID.randomUUID().toString();
         WeaviateObject object = WeaviateObject.builder()
                 .className("Category")
                 .id(uuid)
                 .properties(new HashMap() { {
-                    put("name", name);
-                    put("type", type);
+                    put("label", label);
+                    put("sensitivity", sensitivity);
+                    put("category", category);
+                    put("trait", trait);
                     put("description", description);
                 } })
                 .build();
